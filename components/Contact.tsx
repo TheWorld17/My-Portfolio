@@ -18,7 +18,6 @@ const Contact: React.FC = () => {
     return String(email).toLowerCase().match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
   };
 
-  // Helper function to encode data for Netlify
   const encode = (data: any) => {
     return Object.keys(data)
       .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
@@ -41,11 +40,16 @@ const Contact: React.FC = () => {
     setStatus('sending');
 
     try {
-      // Send data to Netlify
+      // FIX: Netlify requires form-name in the body matched with the hidden input
+      // Added dynamic subject line so you know who is writing immediately
       await fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode({ "form-name": "contact", ...formData })
+        body: encode({ 
+          "form-name": "contact", 
+          "subject": `Portfolio Inquiry from ${formData.name}`,
+          ...formData 
+        })
       });
 
       setStatus('success');
@@ -95,14 +99,14 @@ const Contact: React.FC = () => {
               </div>
             )}
 
-            {/* Netlify Form Configuration */}
+            {/* Netlify Form */}
             <form 
               name="contact" 
               method="POST" 
-              data-netlify="true" 
               onSubmit={handleSubmit} 
               className="space-y-8"
             >
+              {/* IMPORTANT: This hidden input is crucial for Netlify to link the AJAX request to the site form */}
               <input type="hidden" name="form-name" value="contact" />
               
               <div className="group/field relative">

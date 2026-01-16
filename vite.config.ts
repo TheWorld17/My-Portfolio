@@ -8,5 +8,15 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     minify: 'esbuild',
+    target: 'esnext',
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'ui-components': ['./src/components/Header', './src/components/Footer', './src/components/Silk']
+        }
+      }
+    }
   }
 });

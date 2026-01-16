@@ -62,13 +62,15 @@
   <body>
     <!-- 
       Netlify Form Detection Helper 
-      Required because React renders the real form via JS.
-      This allows Netlify bots to see the form exists at build time.
+      Updated with data-netlify="true" and subject field for email notifications.
     -->
-    <form name="contact" netlify netlify-honeypot="bot-field" hidden>
+    <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="contact" />
       <input type="text" name="name" />
       <input type="email" name="email" />
       <textarea name="message"></textarea>
+      <!-- Field for custom email subject -->
+      <input type="hidden" name="subject" /> 
     </form>
 
     <div id="root"></div>

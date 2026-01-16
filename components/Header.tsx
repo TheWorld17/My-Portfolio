@@ -1,15 +1,13 @@
-
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
-  const [isVisible, setIsVisible] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [headerState, setHeaderState] = useState({ isVisible: true, isScrolled: false });
+  
   const lastScrollY = useRef(0);
-  const rafId = useRef<number | null>(null);
+  const ticking = useRef(false);
 
-  // Static constant for nav links
   const NAV_LINKS = useRef([
     { name: 'HOME', href: '#home', num: '01' },
     { name: 'WORK', href: '#work', num: '02' },
@@ -18,59 +16,59 @@ const Header: React.FC = () => {
     { name: 'CONTACT', href: '#contact', num: '05' },
   ]).current;
 
+  // Optimized Scroll Handling: Batched state updates
   useEffect(() => {
     const handleScroll = () => {
-      // Throttle via requestAnimationFrame
-      if (rafId.current) return;
+      if (!ticking.current) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          
+          // Determine visibility and background style
+          const isVisible = currentScrollY < 100 || currentScrollY < lastScrollY.current;
+          const isScrolled = currentScrollY > 50;
 
-      rafId.current = requestAnimationFrame(() => {
-        const currentScrollY = window.scrollY;
-        
-        // Determine if header should be visible (Headroom logic)
-        // Only update if state actually changes to avoid re-renders
-        if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-          setIsVisible(false); 
-        } else {
-          setIsVisible(true);
-        }
-        
-        setIsScrolled(currentScrollY > 50);
-        lastScrollY.current = currentScrollY;
+          setHeaderState(prev => {
+            if (prev.isVisible !== isVisible || prev.isScrolled !== isScrolled) {
+              return { isVisible, isScrolled };
+            }
+            return prev;
+          });
 
-        // Update active section
-        // Optimization: Use logic to avoid reading layout if not needed, 
-        // but here we need it. Checking sections involves layout read.
-        // We limit this logic to the animation frame.
-        const sections = ['home', 'work', 'services', 'about', 'contact'];
-        const current = sections.find(section => {
-          const element = document.getElementById(section);
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            // Expanded range to prevent flickering active state
-            return rect.top >= -200 && rect.top <= window.innerHeight / 2;
-          }
-          return false;
+          lastScrollY.current = currentScrollY;
+          ticking.current = false;
         });
-        if (current) setActiveSection(current);
-
-        rafId.current = null;
-      });
+        ticking.current = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // IntersectionObserver for active link highlighting
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    }, {
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0
+    });
+
+    NAV_LINKS.forEach(link => {
+      const section = document.getElementById(link.href.replace('#', ''));
+      if (section) observer.observe(section);
+    });
+
+    return () => observer.disconnect();
+  }, [NAV_LINKS]);
 
   // Lock body scroll when menu is open
   useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    document.body.style.overflow = isMenuOpen ? 'hidden' : '';
   }, [isMenuOpen]);
 
   const handleLinkClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -94,9 +92,9 @@ const Header: React.FC = () => {
     <>
       <header 
         className={`fixed top-0 left-0 w-full z-[100] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isVisible ? 'translate-y-0' : '-translate-y-full'
+          headerState.isVisible ? 'translate-y-0' : '-translate-y-full'
         } ${
-          isScrolled ? 'bg-[#05010a]/90 backdrop-blur-xl py-4 border-b border-purple-900/20 shadow-2xl' : 'bg-transparent py-8'
+          headerState.isScrolled ? 'bg-[#05010a]/90 backdrop-blur-md py-4 border-b border-purple-900/20 shadow-2xl' : 'bg-transparent py-8'
         } will-change-transform`}
       >
         <div className="max-w-[1440px] mx-auto px-6 md:px-12 flex justify-between items-center">
@@ -136,16 +134,14 @@ const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - optimized transitions */}
       <div 
-        className={`fixed inset-0 bg-[#05010a] z-[105] md:hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed inset-0 bg-[#05010a] z-[105] md:hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none'
         }`}
       >
-        {/* Background Decor */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,_rgba(107,33,168,0.1)_0%,_transparent_60%)]"></div>
         
-        {/* Close Button Inside Overlay (Explicit 'X') */}
         <button 
           onClick={() => setIsMenuOpen(false)}
           className="absolute top-8 right-6 p-4 text-white hover:text-purple-500 transition-colors z-20 group"
@@ -164,7 +160,6 @@ const Header: React.FC = () => {
               href={link.href}
               onClick={(e) => handleLinkClick(e, link.href)}
               className="group flex items-baseline gap-4"
-              style={{ transitionDelay: `${index * 50}ms` }}
             >
               <span className="mono text-xs text-zinc-800 font-bold">0{index + 1}</span>
               <span className={`text-5xl font-[900] tracking-tighter uppercase italic transition-colors duration-300 ${
@@ -174,14 +169,6 @@ const Header: React.FC = () => {
               </span>
             </a>
           ))}
-          
-          <div className="pt-12 border-t border-zinc-900 w-full max-w-xs">
-            <p className="mono text-[10px] text-zinc-600 uppercase tracking-widest mb-4">Social Signal</p>
-            <div className="flex gap-6">
-              <a href="https://www.linkedin.com/in/roman-vykeryk-b8a133336/" target="_blank" rel="noopener noreferrer" className="text-xs font-black uppercase tracking-widest hover:text-purple-500 transition-colors">LinkedIn</a>
-              <a href="https://freelancehunt.com/freelancer/TheWorld99.html" target="_blank" rel="noopener noreferrer" className="text-xs font-black uppercase tracking-widest hover:text-purple-500 transition-colors">Freelancehunt</a>
-            </div>
-          </div>
         </div>
       </div>
     </>
