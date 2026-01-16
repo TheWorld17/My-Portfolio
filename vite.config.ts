@@ -13,8 +13,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'ui-components': ['./src/components/Header', './src/components/Footer', './src/components/Silk']
+          'react-vendor': ['react', 'react-dom']
         }
       }
     }
