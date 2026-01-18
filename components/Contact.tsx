@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -40,8 +41,23 @@ const Contact: React.FC = () => {
     setStatus('sending');
 
     try {
-      // FIX: Netlify requires form-name in the body matched with the hidden input
-      // Added dynamic subject line so you know who is writing immediately
+      // Send email via EmailJS (FREE - 200 emails/month)
+      await emailjs.send(
+        'service_l0px5js',      // Service ID
+        'template_g8y4rml',     // Template ID
+        {
+          name: formData.name,
+          from_email: formData.email,
+          message: formData.message,
+          time: new Date().toLocaleString('en-US', {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+          })
+        },
+        'Vd9gFnGSzQahQXslq'     // Public Key
+      );
+
+      // Also submit to Netlify Forms as backup (for dashboard tracking)
       await fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -55,6 +71,7 @@ const Contact: React.FC = () => {
       setStatus('success');
       setFormData({ name: '', email: '', message: '' });
     } catch (err) {
+      console.error('Form submission error:', err);
       setStatus('error');
       setErrorMessage('Transmission failed. Check connection.');
     }
