@@ -36,7 +36,7 @@ const Contact: React.FC = () => {
       setErrorMessage('A valid email address is required.');
       return;
     }
-    
+
     setStatus('sending');
 
     try {
@@ -45,10 +45,10 @@ const Contact: React.FC = () => {
       await fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode({ 
-          "form-name": "contact", 
+        body: encode({
+          "form-name": "contact",
           "subject": `Portfolio Inquiry from ${formData.name}`,
-          ...formData 
+          ...formData
         })
       });
 
@@ -66,9 +66,9 @@ const Contact: React.FC = () => {
         <div className="space-y-12">
           <div>
             <span className="mono text-[10px] text-purple-600 tracking-[0.5em] uppercase mb-4 block font-black italic">Collaboration</span>
-            <h2 className="text-[15vw] lg:text-[120px] font-[900] tracking-tighter uppercase italic leading-[0.75] text-white">Start.<br/><span className="text-zinc-900">Today.</span></h2>
+            <h2 className="text-[15vw] lg:text-[120px] font-[900] tracking-tighter uppercase italic leading-[0.75] text-white">Start.<br /><span className="text-zinc-900">Today.</span></h2>
           </div>
-          
+
           <p className="text-xl md:text-2xl text-zinc-500 font-light leading-snug max-w-md italic">
             Ready to deploy your next high-impact project? Reach out and let's optimize your digital presence.
           </p>
@@ -100,18 +100,22 @@ const Contact: React.FC = () => {
             )}
 
             {/* Netlify Form */}
-            <form 
-              name="contact" 
-              method="POST" 
-              onSubmit={handleSubmit} 
+            <form
+              name="contact"
+              method="POST"
+              onSubmit={handleSubmit}
               className="space-y-8"
             >
               {/* IMPORTANT: This hidden input is crucial for Netlify to link the AJAX request to the site form */}
               <input type="hidden" name="form-name" value="contact" />
-              
+              {/* Honeypot field for spam prevention */}
+              <p style={{ display: 'none' }}>
+                <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+              </p>
+
               <div className="group/field relative">
                 <label className="mono text-[10px] text-zinc-600 uppercase tracking-widest block mb-2 font-black transition-colors group-focus-within/field:text-purple-500">Identity</label>
-                <input 
+                <input
                   type="text" name="name" value={formData.name} onChange={handleChange} placeholder="NAME / COMPANY"
                   className="w-full bg-transparent border-b-2 border-zinc-900 py-3 focus:border-purple-600 transition-all outline-none text-xl md:text-3xl font-black italic tracking-tighter placeholder:text-zinc-800 text-white"
                 />
@@ -119,7 +123,7 @@ const Contact: React.FC = () => {
 
               <div className="group/field relative">
                 <label className="mono text-[10px] text-zinc-600 uppercase tracking-widest block mb-2 font-black transition-colors group-focus-within/field:text-purple-500">Signal (Email)</label>
-                <input 
+                <input
                   type="email" name="email" value={formData.email} onChange={handleChange} placeholder="EMAIL@DOMAIN.COM"
                   className="w-full bg-transparent border-b-2 border-zinc-900 py-3 focus:border-purple-600 transition-all outline-none text-xl md:text-3xl font-black italic tracking-tighter placeholder:text-zinc-800 text-white"
                 />
@@ -127,7 +131,7 @@ const Contact: React.FC = () => {
 
               <div className="group/field relative">
                 <label className="mono text-[10px] text-zinc-600 uppercase tracking-widest block mb-2 font-black transition-colors group-focus-within/field:text-purple-500">Message</label>
-                <textarea 
+                <textarea
                   name="message" value={formData.message} onChange={handleChange} rows={2} placeholder="DESCRIBE YOUR VISION..."
                   className="w-full bg-transparent border-b-2 border-zinc-900 py-3 focus:border-purple-600 transition-all outline-none text-xl md:text-3xl font-black italic tracking-tighter placeholder:text-zinc-800 text-white resize-none"
                 ></textarea>
@@ -135,7 +139,7 @@ const Contact: React.FC = () => {
 
               {status === 'error' && <p className="text-red-600 text-[10px] font-black uppercase tracking-widest bg-red-950/20 p-4 border border-red-900">{errorMessage}</p>}
 
-              <button 
+              <button
                 type="submit" disabled={status === 'sending'}
                 className="w-full py-6 bg-purple-700 text-white font-[900] uppercase tracking-[0.5em] text-[11px] transition-all relative overflow-hidden group/submit shadow-[0_10px_30px_rgba(126,34,206,0.2)] mt-4"
               >
